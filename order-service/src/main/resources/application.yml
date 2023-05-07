@@ -9,12 +9,12 @@ spring:
   application:
     name: order-service # order服务名称
   cloud:
-    nacos:
+    nacos: # nacos启动命令 D:\nacos\bin>startup.cmd -m standalone
       server-addr: localhost:8848
       discovery:
         cluster-name: Guangzhou
         #namespace: 53a32d4a-c27a-4d0e-88ac-dcde8234e7ec # dev环境 配置命名空间namespace
-        ephemeral: false  # 是否为临时实例
+        ephemeral: false  # 是否为临时实例 临时实例采用心跳检测，实例停止时nacos注册中心剔除此实例；非临时实例nacos主动询问，实例停止时nacos注册中心不会剔除此实例
 mybatis:
   type-aliases-package: cn.itcast.user.pojo
   configuration:
@@ -24,7 +24,8 @@ logging:
     cn.itcast: debug
   pattern:
     dateformat: MM-dd HH:mm:ss:SSS
-
+# eureka中消费者定时拉取服务pull；nacos注册中心则会主动推送变更消息push和pull同时进行，当服务停止时，nacos立刻发送消息给消费者
+# eureka采用心跳检测；nacos根据是否为临时实例采取不同检测方法
 # eureka 客户端配置
 # eureka地址信息
 #eureka:
@@ -34,7 +35,7 @@ logging:
 
 # 设置对user-service的负载均衡策略
 # com.netflix.loadbalancer.RandomRule 随机
-# com.alibaba.cloud.nacos.ribbon.NacosRule 优先选择同集群的实例 在集群内随机
+# com.alibaba.cloud.nacos.ribbon.NacosRule 优先选择同集群的实例 在集群内随机 通过在nacos控制台设置权重来根据权重负载均衡
 user-service:
   ribbon:
     NFLoadBalancerRuleClassName: com.alibaba.cloud.nacos.ribbon.NacosRule
@@ -44,3 +45,16 @@ ribbon:
   eager-load:
     clients: user-service
     enabled: true
+# feign日志等级配置
+#feign:
+#  client:
+#    config:
+#      default:
+#        loggerLevel: FULL
+
+# feign优化：日志级别使用Basic; 使用httpclient代替URLConnection
+feign:
+  httpclient:
+    enabled: true # 支持httpclient
+    max-connections: 200 # 最大连接数
+    max-connections-per-route: 50 # 单个路径最大连接数
